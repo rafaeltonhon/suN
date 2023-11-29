@@ -1,0 +1,5 @@
+12 12   ! lattice size space time
+2.400 ! beta
+40000 ! number of monte carlo sweeps
+10 8
+2 ! number of colors

@@ -1,0 +1,37 @@
+/12^4 beta=2,400 1000 sweeps
+/16^4
+/16^4 beta=2,475 1615 sweeps
+/8^4 beta=2.25 65000 sweeps
+/Vqq-8^4-inc-eps-converted-to.pdf
+/Vqq-8^4-inc.eps
+/Vqq-8^4.aux
+/Vqq-8^4.log
+/Vqq-8^4.pdf
+/Vqq-8^4.tex
+/bining.py
+/fit.log
+/fort.101
+/fort.102
+/fort.103
+/fort.104
+/fort.105
+/fort.106
+/fort.107
+/fort.108
+/fort.109
+/fort.110
+/lattice.mod
+/lattice.o
+/mathtools
+/mathtools.mod
+/mathtools.o
+/measures.mod
+/measures.o
+/suN
+/suN-Vqq.dat
+/suN-ac.dat
+/suN-plaquette.dat
+/suN.p
+/thermalize.mod
+/thermalize.o
+/wilson.py
