@@ -1,3 +1,17 @@
+!=====================================================================================
+! tonhonr@usp.br
+!
+! This module contains the definitions of the fundamental variables used in all su(N) work
+! We define variables that are always used, and the fields
+! Variables. We define:
+!            -> The sizes of the lattice : nr (spatial size) and nt (time lenght);
+!            -> The number of colors in the theory nc (until Novenber 29 of 2023 the module worck only for nc=2);
+!
+! Functions and Vectors. We define: 
+!            -> Gauge link field as as matrix with entraces (x,y,z,t,mu,i,j) where i and j are the color index;
+!            -> A function that compute the sum of the stampe on a given position;
+!            -> A function that give to us all the neighbors of a given link.
+!=====================================================================================
 module lattice
     implicit none
 
