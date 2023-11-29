@@ -73,7 +73,7 @@ module thermalize
         end select
     endfunction
 
-    ! subroutne that initialize the gluonr matrix and calculates the initial action
+    ! subroutne that initialize the gluon matrix and calculates the initial action
     subroutine initialize(u,action,init)
         complex(kind=r8), intent(inout):: u(nr,nr,nr,nt,4,nc,nc)
         complex(kind=r8),dimension(nc,nc) :: plaquette, uni_pmi, umi_pnid, uni_nd, temp
