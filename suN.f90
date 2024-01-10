@@ -32,7 +32,7 @@ program suN
         endif
         imix=imix+1
         ! smeare the configurations
-        if(i.gt.50) call smearing(u,1.0_r8,200)
+        !if(i.gt.50) call smearing(u,1.0_r8,200)
         call measurewilson(u,a,b,w)
 
         ! get away with the data
