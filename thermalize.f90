@@ -37,9 +37,9 @@ module thermalize
         case(2) ! su2 group
             sunxmatrix=xmatrix(epsilon)
         case(3) ! su3 group
-            r=cz
-            s=cz
-            t=cz
+            r=ident(nc)
+            s=ident(nc)
+            t=ident(nc)
 
             ! for r
             x=xmatrix(epsilon)
@@ -65,8 +65,8 @@ module thermalize
             t(3,3)=x(2,2)
             t(1,1)=cr
 
+            s=matmul(s,t)
             r=matmul(r,s)
-            r=matmul(r,t)
             sunxmatrix=r
         case default
             stop
@@ -78,8 +78,8 @@ module thermalize
         complex(kind=r8), intent(inout):: u(nr,nr,nr,nt,4,nc,nc)
         complex(kind=r8),dimension(nc,nc) :: plaquette, uni_pmi, umi_pnid, uni_nd, temp
         integer(kind=i4), dimension(1:4) :: n, npmi, nmmi, npni, nmni, npmimni
-        real(kind=r8) :: action, sum, r(4), rn, p1
-        integer(kind=i4) :: e1, e2, e3, e4, mi, init, i, ni
+        real(kind=r8) :: action, sum, p1
+        integer(kind=i4) :: e1, e2, e3, e4, mi, init, ni
 
         sum=0.0_r8
         select case(init)
@@ -195,7 +195,7 @@ module thermalize
         integer(kind=i4) :: nc
         select case(nc)
         case(2) ! SU(2) group
-            alpha=a(1,1)*a(2,2)-a(1,2)*a(2,1)
+            alpha=dreal(a(1,1)*a(2,2)-a(1,2)*a(2,1))
             alpha=dsqrt(alpha)
             if(dabs(alpha).lt.1e-5)then
                 a=xmatrix(0.0_r8)
@@ -215,7 +215,11 @@ module thermalize
             v(2,1)=-conjg(w2)/detw
             v(2,2)=conjg(w1)/detw
             call hbxmatrix(x,detw)
-            y=matmul(x,dagger(v))
+            !print*,x
+            !print*,''
+            !print*,dagger(v)
+            y=matmul(x,transpose(conjg(v)))
+            !print*,'1'
             r=ident(nc)
             r(1,1)=y(1,1)
             r(1,2)=y(1,2)
@@ -234,7 +238,7 @@ module thermalize
             v(2,1)=-conjg(w2)/detw
             v(2,2)=conjg(w1)/detw
             call hbxmatrix(x,detw)
-            y=matmul(x,dagger(v))
+            y=matmul(x,transpose(conjg(v)))
             r=ident(nc)
             r(1,1)=y(1,1)
             r(1,3)=y(1,2)
@@ -252,7 +256,7 @@ module thermalize
             v(2,1)=-conjg(w2)/detw
             v(2,2)=conjg(w1)/detw
             call hbxmatrix(x,detw)
-            y=matmul(x,dagger(v))
+            y=matmul(x,transpose(conjg(v)))
             r=ident(nc)
             r(2,2)=y(1,1)
             r(2,3)=y(1,2)
@@ -270,7 +274,7 @@ module thermalize
         complex(kind=r8) :: uprime(nc,nc), udif(nc,nc), plaquette(nc,nc), umini(nc,nc)
         real(kind=r8), intent(inout) :: s
         real(kind=r8) :: epsilon, eta, ds
-        integer(kind=i4) :: e1, e2, e3, e4, mi, imc
+        integer(kind=i4) :: e1, e2, e3, e4, mi
         integer(kind=i4), intent(inout) :: acc
         
         ! we acess each lattice site
@@ -313,7 +317,7 @@ module thermalize
     subroutine heatbath(u,nc)
         complex(kind=r8), intent(inout) :: u(nr,nr,nr,nr,4,nc,nc)
         complex(kind=r8) :: stamp(nc,nc) !v(nr,nr,nr,nr,4,nc,nc),
-        integer(kind=i4) :: i, j, e1, e2, e3, e4, mi, nc
+        integer(kind=i4) :: e1, e2, e3, e4, mi, nc
         do e1=1,nr
             do e2=1,nr
                 do e3=1,nr
@@ -322,6 +326,9 @@ module thermalize
                             stamp=stample(u,e1,e2,e3,e4,mi) 
                             call sunhb(u(e1,e2,e3,e4,mi,:,:),stamp,nc)
                             call keapinsuN(u(e1,e2,e3,e4,mi,:,:),nc)
+                            !print*,u(e1,e2,e3,e4,mi,1,:)
+                            !print*,u(e1,e2,e3,e4,mi,2,:)
+                            !print*,''
                         enddo
                     enddo
                 enddo
@@ -334,7 +341,7 @@ module thermalize
         complex(kind=r8), intent(inout) :: u(nr,nr,nr,nr,4,nc,nc)
         complex(kind=r8) :: v(nc,nc), unew(nc,nc)
         real(kind=r8) :: ds, zeta
-        integer(kind=i4) :: i, j, e1, e2, e3, e4, mi, nc
+        integer(kind=i4) :: e1, e2, e3, e4, mi, nc
         do e1=1,nr
             do e2=1,nr
                 do e3=1,nr

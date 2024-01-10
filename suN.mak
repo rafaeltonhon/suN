@@ -1,5 +1,5 @@
 FC=gfortran
-FFLAGS=-O3 -g -fcheck=all
+FFLAGS=-O3 -g -fbacktrace -fcheck=all
 
 .SUFFIXES:
 .SUFFIXES: .o .f90

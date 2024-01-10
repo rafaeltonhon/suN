@@ -26,10 +26,10 @@ program suN
     do imc=1,nmc
         ! evolve the system and make the measuments
         if(imix.ne.4) call heatbath(u,nc)
-        if(imix.eq.4)then
-            call overrelaxation(u,nc)
-            imix=0
-        endif
+        !if(imix.eq.4)then
+        !    call overrelaxation(u,nc)
+        !    imix=0
+        !endif
         imix=imix+1
         ! smeare the configurations
         !if(i.gt.50) call smearing(u,1.0_r8,200)
