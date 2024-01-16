@@ -1,5 +1,5 @@
 FC=gfortran
-FFLAGS=-O3 -g -fbacktrace -fcheck=all
+FFLAGS=-O3 -g -fcheck=all
 
 .SUFFIXES:
 .SUFFIXES: .o .f90
@@ -13,6 +13,7 @@ OBJECTS=\
    mathtools.o\
    thermalize.o\
    measures.o\
+   center.o
 
 SRC=\
    suN.f90\
@@ -20,6 +21,7 @@ SRC=\
    mathtools.f90\
    thermalize.f90\
    measures.f90\
+   center.f90\
 
 suN: $(OBJECTS)
 	$(FC) -o $@ $^
@@ -30,11 +32,14 @@ clean:
 ctags: $(SRC)
 	ctags $(SRC)
 
-suN.o: lattice.o mathtools.o thermalize.o measures.o suN.f90
+suN.o: lattice.o mathtools.o thermalize.o measures.o center.o suN.f90
 	$(FC) -Wall -c suN.f90 -o suN.o
 
 thermalize.o: lattice.o mathtools.o thermalize.f90
 	$(FC) -Wall -c thermalize.f90 -o thermalize.o
+
+center.o: lattice.o mathtools.o center.f90
+	$(FC) -Wall -c center.f90 -o center.o
 
 measures.o: lattice.o mathtools.o measures.f90
 	$(FC) -Wall -c measures.f90 -o measures.o

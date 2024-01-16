@@ -41,7 +41,7 @@ module lattice
     contains
      ! function that calculates the sum of the stamples
     function stample(u,e1,e2,e3,e4,mi)
-        complex(kind=r8), dimension(nc,nc) :: stample, uni_pmi, umi_pnid, uni_nd, p1, p2
+        complex(kind=r8), dimension(nc,nc) :: stample, uni_pmi, umi_pnid, uni_nd
         complex(kind=r8), dimension(nc,nc) :: uni_pmimnid, umi_mnid, uni_mni, temp
         integer(kind=i4), dimension(1:4) :: n, npmi, nmmi, npni, nmni, npmimni
         complex(kind=r8) :: u(nr,nr,nr,nt,4,nc,nc)
@@ -69,7 +69,7 @@ module lattice
         stample=temp
     endfunction stample
 
-        ! subroutine that return us the six neighbors
+    ! subroutine that return us the six neighbors
     subroutine neighbors(n,npmi,nmmi,npni,nmni,npmimni,mi,ni)
         integer(kind=i4), dimension(1:4) :: n, npmi, nmmi, npni, nmni, npmimni
         integer(kind=i4) :: mi, ni
@@ -112,4 +112,29 @@ module lattice
             endif
         endif
     endsubroutine neighbors
+
+    ! subroutine that print the lattice on a file for us
+    subroutine printlattice(u,flag)
+        complex(kind=r8) :: u(nr,nr,nr,nt,4,nc,nc)
+        integer(kind=i4) :: e1, e2, e3, e4, mi, flag
+        ! we acess each lattice site
+        do e1=1,nr
+            do e2=1,nr
+                do e3=1,nr
+                    do e4=1,nr
+                        do mi=1,4
+                            if(nc.eq.2)then
+                                ! the ouput for is x, y, z, t, mi, a1, a2, a3, a4
+                                write(flag,*) e1, e2, e3, e4, mi, aimag(u(e1,e2,e3,e4,mi,1,2)),&
+                                & real(u(e1,e2,e3,e4,mi,1,2)), aimag(u(e1,e2,e3,e4,mi,1,1)),&
+                                & real(u(e1,e2,e3,e4,mi,1,1))
+                            endif
+                        enddo
+                    enddo
+                enddo
+            enddo
+        enddo
+        ! the configuration is printed
+        write(flag,*) ""
+    endsubroutine printlattice
 endmodule lattice

@@ -9,7 +9,8 @@ module measures
     use lattice
     use mathtools
     implicit none
-    real(kind=r8), allocatable :: w(:,:)
+    real(kind=r8), allocatable, dimension(:,:) :: w, wp!, wr
+    real(kind=r8), allocatable, dimension(:) :: vqq, vqqp, chi, chip!, chip
     contains
     subroutine smearing(u,alpha,nsmearing)
         complex(kind=r8), dimension(nr,nr,nr,nt,4,nc,nc), intent(inout) :: u
@@ -38,137 +39,105 @@ module measures
         enddo
     endsubroutine smearing
 
-    subroutine measurewilson(u,r,t,w)
+    subroutine measurewilson(u,a,b,w)
         complex(kind=r8), intent(in) :: u(nr,nr,nr,nt,4,nc,nc)
-        real(kind=r8), intent(inout) :: w(r,t)
-        integer(kind=i4) :: r, t, i, j
+        real(kind=r8), intent(out) :: w(a,b)
+        real(kind=r8) :: sum
+        integer(kind=i4) :: a,b, i, j, n(4), e1, e2, e3, e4, mu, nu
         ! we compute the loops w(a,b) and save the result
-        w=0.0_r8
-        do i=1,r
-            do j=1,t
-                w(i,j)=wilsonplanar(u,i,j)
+        do i=1,a
+            do j=1,b
+                sum=0.0_r8
+                ! compute the mean wilson loop
+                do e1=1,nr
+                do e2=1,nr
+                do e3=1,nr
+                do e4=1,nt
+                    n=(/e1,e2,e3,e4/)
+                    do mu=1,3
+                    do nu=mu+1,4
+                        sum=sum+wilsonplanar(u,n,mu,nu,i,j)
+                        ! the lattice is simmetric, so we
+                        ! must consider the case a->b and b->a
+                        ! now we interchange a and b
+                        if(i.ne.j)then 
+                            sum=sum+wilsonplanar(u,n,mu,nu,j,i)                    
+                        endif
+                        ! the loop for this site is calculated!
+                    enddo
+                    enddo
+                enddo
+                enddo
+                enddo
+                enddo
+            
+                if(i.eq.j)then
+                    w(i,j)=sum/(6.0_r8*nt*nr**3)    ! quadratic loops
+                else
+                    w(i,j)=sum/(12_r8*nt*nr**3) ! rectangular loops
+                endif
             enddo
         enddo
     endsubroutine measurewilson
 
     ! function that calculate te wilson loop of size a,b
-    function wilsonplanar(u,a,b)
+    function wilsonplanar(u,n,mu,nu,a,b)
         complex(kind=r8) :: u(nr,nr,nr,nt,4,nc,nc)
-        complex(kind=r8), dimension(nc,nc) :: unmu, unpmunu, unpnumu, unnu, umunu
-        real(kind=r8) :: sum, wilsonplanar
-        integer(kind=i4), dimension(4) :: n, m, npmu, npnu
-        integer(kind=i4) :: x, y, z, t, mu, nu, a, b, i
-        sum=0.0_r8
-        do x=1,nr
-            do y=1,nr
-                do z=1,nr
-                    do t=1,nt
-                        do mu=1,3
-                            do nu=mu+1,4
-                                umunu=ident(nc)
-                                n=(/x,y,z,t/)
-                                m=(/x,y,z,t/)
-                                unmu=ident(nc)
-                                unpmunu=ident(nc)
-                                unpnumu=ident(nc)
-                                unnu=ident(nc)
-
-
-                                ! computing the lines
-                                do i=1,a
-                                    !unmu=matmul(unmu,u(n(1),n(2),n(3),n(4),mu,:,:))
-                                    umunu=matmul(umunu,u(n(1),n(2),n(3),n(4),mu,:,:))
-                                    n(mu)=n(mu)+1
-                                    if(n(mu).gt.nr) n(mu)=1
-                                enddo
-
-                                do i=1,b
-                                    !unpmunu=matmul(unpmunu,u(n(1),n(2),n(3),n(4),nu,:,:))
-                                    umunu=matmul(umunu,u(n(1),n(2),n(3),n(4),nu,:,:))
-                                    n(nu)=n(nu)+1
-                                    if(n(nu).gt.nr) n(nu)=1
-                                enddo
-
-                                do i=1,a
-                                    n(mu)=n(mu)-1
-                                    if(n(mu).lt.1) n(mu)=nr
-                                !   unpnumu=matmul(unpnumu,u(n(1),n(2),n(3),n(4),mu,:,:))
-                                umunu=matmul(umunu,conjg(transpose(u(n(1),n(2),n(3),n(4),mu,:,:))))
-                                enddo
-                                !umunu=matmul(umunu,conjg(transpose(unpnumu)))
-                                
-                                do i=1,b
-                                    n(nu)=n(nu)-1
-                                    if(n(nu).lt.1) n(nu)=nr
-                                    umunu=matmul(umunu,conjg(transpose(u(n(1),n(2),n(3),n(4),nu,:,:))))
-                                    !unnu=matmul(unnu,u(n(1),n(2),n(3),n(4),nu,:,:))
-                                enddo
-                                sum=sum+dreal(ctrace(umunu,nc))/(nc)
-                            enddo
-                        enddo
-                    enddo
-                enddo
+        complex(kind=r8), dimension(nc,nc) :: umunu
+        real(kind=r8) :: wilsonplanar
+        integer(kind=i4), dimension(4) :: n
+        integer(kind=i4) :: mu, nu, a, b, i
+        
+            umunu=ident(nc)
+            !n=(/x,y,z,t/)
+            ! computing the lines
+            do i=1,a
+            umunu=matmul(umunu,u(n(1),n(2),n(3),n(4),mu,:,:))
+            n(mu)=n(mu)+1
+            if(n(mu).gt.nr) n(mu)=1
             enddo
-        enddo
-        if(a.eq.b)then
-            wilsonplanar=sum/(6.0_r8*nt*nr**3)    ! quadratic loops
-        else
-            wilsonplanar=sum/(12_r8*nt*nr**3) ! rectangular loops
-        endif
+            do i=1,b
+                umunu=matmul(umunu,u(n(1),n(2),n(3),n(4),nu,:,:))
+                n(nu)=n(nu)+1
+                if(n(nu).gt.nr) n(nu)=1
+            enddo
+            do i=1,a
+                n(mu)=n(mu)-1
+                if(n(mu).lt.1) n(mu)=nr
+                umunu=matmul(umunu,conjg(transpose(u(n(1),n(2),n(3),n(4),mu,:,:))))
+            enddo
+            do i=1,b
+                n(nu)=n(nu)-1
+                if(n(nu).lt.1) n(nu)=nr
+                umunu=matmul(umunu,conjg(transpose(u(n(1),n(2),n(3),n(4),nu,:,:))))
+            enddo
+            wilsonplanar=dreal(ctrace(umunu,nc))/nc
     endfunction wilsonplanar
 
-    ! function that calculates the polyakov lop at a position m
-    function polyakovl(x,y,z,nt,u)
-        complex(kind=r8) :: u(nr,nr,nr,nt,4,nc,nc), pl(nc,nc)
-        complex(kind=r8) :: polyakovl
-        integer(kind=i4) :: x, y, z, t, nt
-        pl=ident(nc)
-        do t=1,nt
-            pl=matmul(pl,u(x,y,z,t,4,:,:))
+    ! subroutine that compute the creutz ratios
+    subroutine creutz(chi,a,b,w)
+        real(kind=r8) :: w(a,b), chi(a)
+        integer(kind=i4) :: a, b, i
+        chi=0.0_r8
+        do i=1,a
+            if(i.eq.1)then
+                chi(1)=-log(w(1,1))
+            else
+                chi(i)=-log((w(i,i)*w(i-1,i-1))/(w(i-1,i)*w(i,i-1)))
+            endif
         enddo
-        polyakovl=(ctrace(pl,nc))!pl(1,1)+pl(2,2))
-    endfunction polyakovl
+    endsubroutine creutz
 
-    ! function that retunrns a matrix with the polyakov loop on each side of the space
-    function latticepolyakov(nr,nt,u)
-        complex(kind=r8) :: u(nr,nr,nr,nt,4,nc,nc)
-        complex(kind=r8) :: plat(nr,nr,nr), latticepolyakov(nr,nr,nr)
-        integer(kind=i4) :: x, y, z, nr, nt
-        do x=1,nr
-            do y=1,nr
-                do z=1,nr
-                    plat(x,y,z)=polyakovl(x,y,z,nt,u)
-                enddo
-            enddo
+    ! subroutine tat computes the qq potential on the lattice
+    subroutine qqpot(v,w,a,b)
+        real(kind=r8) :: v(a), w(a,b)
+        integer(kind=i4) :: a, b, i, j
+        v=0.0_r8
+        do i=1,a
+        do j=1,b-1
+            v(i)=v(i)-log(w(i,j+1)/w(i,j))
         enddo
-        latticepolyakov=plat
-    endfunction latticepolyakov
-
-    subroutine polyakovcorrelator(pmpn,nr)
-        real(kind=r8), intent(inout) :: pmpn(nr)
-        complex(kind=r8) :: polyakov(nr,nr,nr)
-        integer(kind=i4) :: nr, x, y, z, r, mi, m(3), n(3)
-        ! computes the polyakov loops on each site of the lattice
-        polyakov=latticepolyakov(nr,nt,u)
-        pmpn=0.0_r8
-        ! no we do the mean value of the correlator
-        do x=1,nr
-            do y=1,nr
-                do z=1,nr
-                    m=(/x,y,z/)
-                    ! we vary the distance
-                    do r=1,nr
-                        ! we varry the direction
-                        do mi=1,3
-                            n=m
-                            n(mi)=n(mi)+r
-                            if(n(mi).gt.nr) n(mi)=n(mi)-nr
-                            pmpn(r)=pmpn(r)+dreal(polyakov(x,y,z)*conjg(polyakov(n(1),n(2),n(3))))
-                        enddo
-                    enddo
-                enddo
-            enddo
         enddo
-        pmpn=pmpn/(2.0_r8*nr**3.0_r8)
-    endsubroutine polyakovcorrelator
+        v=v/(b-1)
+    endsubroutine qqpot
 endmodule measures
